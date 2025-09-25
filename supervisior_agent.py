@@ -40,13 +40,14 @@ bedrock_model = BedrockModel(
 
 # Der System-Prompt wird angepasst, um die neuen, dynamischen Tools zu nutzen
 supervisor_agent = Agent(
+    name="Supervisor Agent",
+    description="Ein Supervisor-Agent, der andere spezialisierte Agenten orchestriert.",
     system_prompt="""Du bist ein intelligenter Supervisor-Agent.
     Deine Aufgabe ist es, die Anfragen des Benutzers zu analysieren und sie in logische Schritte zu zerlegen.
-    Deine Werkzeuge sind direkte Verbindungen zu spezialisierten Agenten.
+    Benutze deine Werkzeuge um den richten Agenten für die jeweilige Aufgabe zu finden.
     Wähle das passende Werkzeug des richtigen Spezialisten, um die Aufgabe zu erfüllen.
     Kombiniere die Werkzeuge, um mehrstufige Aufgaben zu lösen.""",
     
-    description="Ein Supervisor-Agent, der andere spezialisierte Agenten orchestriert.",
     
     # Die Tools des Supervisors sind jetzt die dynamisch erstellten Proxy-Tools
     tools=provider.tools,

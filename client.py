@@ -44,10 +44,9 @@ client_bedrock_model = BedrockModel(
 )
 
 client_agent = Agent(
-    system_prompt="""Du bist ein user-freundlicher Client-Agent. Deine Aufgabe ist es,
-    die Anfragen des Benutzers entgegenzunehmen und die verfügbaren Tools zu nutzen,
-    um sie auszuführen. Diese Tools sind Proxies, die einen mächtigen Supervisor
-    Agenten aufrufen, der wiederum andere Spezialisten orchestrieren kann.""",
+    system_prompt="""Du bist ein Kommandozeilen-Assistent. Deine Aufgabe ist es,
+    die Anweisung des Benutzers zu analysieren und das am besten passende Werkzeug (Tool) auszuführen.
+    Nutze die dir zur Verfügung stehenden Werkzeuge, um den Supervisor-Agenten zu finden und übertrage ihm die Aufgabe.""",
     tools=provider.tools,  # Hier werden die dynamisch erstellten Tools übergeben
     model=client_bedrock_model
 )
