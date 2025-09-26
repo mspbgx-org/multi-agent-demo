@@ -26,10 +26,10 @@ if not provider.tools:
     print("Supervisor: Keine Tools von Spezialisten-Agenten entdeckt. Stelle sicher, dass sie laufen.")
     exit()
 
-print("Supervisor: Folgende Fähigkeiten von Spezialisten erfolgreich entdeckt:")
-for tool in provider.tools:
-    # Der Tool-Name wird automatisch generiert, z.B. 'search_agent_websearch'
-    print(f"- {tool.__name__}")
+# print("Supervisor: Folgende Fähigkeiten von Spezialisten erfolgreich entdeckt:")
+# for tool in provider.tools:
+#     # Der Tool-Name wird automatisch generiert, z.B. 'search_agent_websearch'
+#     print(f"- {tool.__name__}")
 
 
 # --- Schritt 3: Den Supervisor Agenten mit den dynamisch entdeckten Tools definieren ---
