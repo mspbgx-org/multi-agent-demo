@@ -9,8 +9,7 @@ logging.getLogger("strands").setLevel(logging.INFO)
 
 # --- Schritt 1: Definiere, wo die Spezialisten-Agenten zu finden sind ---
 SPECIALIST_AGENT_URLS = [
-    "http://localhost:5001",  # Search Agent
-    "http://localhost:5002",  # Markdown Agent
+    "https://yz99cpygph.eu-central-1.awsapprunner.com",  # Markdown Agent
 ]
 
 
@@ -61,6 +60,6 @@ supervisor_agent = Agent(
 print("Supervisor Agent wird gestartet...")
 a2a_server = A2AServer(
     agent=supervisor_agent,
-    http_url="http://localhost:5000"
+    http_url="https://tpe2aw8ekp.eu-central-1.awsapprunner.com"
 )
-a2a_server.serve(host="0.0.0.0", port=5000)
+a2a_server.serve(host="0.0.0.0", port=443)

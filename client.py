@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 # --- Schritt 1: Definiere, wo der Supervisor zu finden ist ---
 # Der Client muss nur die Adresse des Supervisors kennen.
-SUPERVISOR_URL = "http://localhost:5000"
+SUPERVISOR_URL = "https://tpe2aw8ekp.eu-central-1.awsapprunner.com/"
 
 
 # --- Schritt 2: Den Tool Provider initialisieren ---

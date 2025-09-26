@@ -47,6 +47,6 @@ search_agent = Agent(
 
 a2a_server = A2AServer(
     agent=search_agent,
-    http_url="http://localhost:5001"
+    http_url="https://yz99cpygph.eu-central-1.awsapprunner.com:443"
 )
-a2a_server.serve(host="0.0.0.0", port=5001)
+a2a_server.serve(host="0.0.0.0", port=443)

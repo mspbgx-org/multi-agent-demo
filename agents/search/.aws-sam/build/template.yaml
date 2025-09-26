@@ -1,0 +1,93 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for AWS App Runner Service roulette-agent
+Parameters:
+  Region:
+    Type: String
+    Description: AWS Region for ECR Image
+    Default: eu-central-1
+  ServiceName:
+    Type: String
+    Description: Name for all App Runner resources
+    Default: blueagent
+  AccountId:
+    Type: String
+    Description: AWS Account ID for ECR Image
+    Default: '425153892013'
+Resources:
+  AppRunnerAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${ServiceName}-apprunner-access-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: build.apprunner.amazonaws.com
+          Action: sts:AssumeRole
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+  AppRunnerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName:
+        Fn::Sub: ${ServiceName}-apprunner-instance-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: tasks.apprunner.amazonaws.com
+          Action: sts:AssumeRole
+      Policies:
+      - PolicyName: BedrockInvokeModel
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - bedrock:InvokeModel
+            - bedrock:InvokeModelWithResponseStream
+            Resource:
+            - Fn::Sub: arn:aws:bedrock:*::foundation-model/amazon.nova-micro-v1:0
+            - Fn::Sub: arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0
+            - Fn::Sub: arn:aws:bedrock:*:*:inference-profile/*
+  AutoScaling:
+    Type: AWS::AppRunner::AutoScalingConfiguration
+    Properties:
+      AutoScalingConfigurationName:
+        Fn::Sub: ${ServiceName}-single
+      MaxConcurrency: 100
+      MinSize: 1
+      MaxSize: 1
+  AppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName:
+        Ref: ServiceName
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn:
+            Fn::GetAtt:
+            - AppRunnerAccessRole
+            - Arn
+        ImageRepository:
+          ImageIdentifier:
+            Fn::Sub: ${AccountId}.dkr.ecr.${Region}.amazonaws.com/${ServiceName}:latest
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: '443'
+        AutoDeploymentsEnabled: true
+      InstanceConfiguration:
+        Cpu: '1024'
+        Memory: '2048'
+        InstanceRoleArn:
+          Fn::GetAtt:
+          - AppRunnerInstanceRole
+          - Arn
+      AutoScalingConfigurationArn:
+        Fn::GetAtt:
+        - AutoScaling
+        - AutoScalingConfigurationArn

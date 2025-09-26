@@ -1,0 +1,102 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: SAM Template for AWS App Runner Service roulette-agent
+
+Parameters:
+  Region:
+    Type: String
+    Description: AWS Region for ECR Image
+    Default: eu-central-1
+  ServiceName:
+    Type: String
+    Description: Name for all App Runner resources
+    Default: blueagent
+  ## wenn ein Materna Subnetz verwendet wird, dann brauchen wir auch ein NAT GW oder ein VPC Endpoint für Bedrock, damit die Anwendung auch an den Bedrock Endpunkt kommt.
+  # SubnetId:
+  #   Type: String
+  #   Description: Subnet ID for App Runner VPC Connector
+  #   Default: subnet-041ffe0bf7daeb276
+  AccountId:
+    Type: String
+    Description: AWS Account ID for ECR Image
+    Default: "425153892013"
+
+Resources:
+  AppRunnerAccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-apprunner-access-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: build.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+
+
+  AppRunnerInstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub "${ServiceName}-apprunner-instance-role"
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: tasks.apprunner.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: BedrockInvokeModel
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource:
+                  - !Sub arn:aws:bedrock:*::foundation-model/amazon.nova-micro-v1:0
+                  - !Sub arn:aws:bedrock:*:*:inference-profile/*
+
+  ## wenn ein Materna Subnetz verwendet wird, dann brauchen wir auch ein NAT GW oder ein VPC Endpoint für Bedrock, damit die Anwendung auch an den Bedrock Endpunkt kommt.
+  # VpcConnector:
+  #   Type: AWS::AppRunner::VpcConnector
+  #   Properties:
+  #     VpcConnectorName: !Sub "${ServiceName}-connector"
+  #     Subnets:
+  #       - !Ref SubnetId
+
+  AutoScaling:
+    Type: AWS::AppRunner::AutoScalingConfiguration
+    Properties:
+      AutoScalingConfigurationName: !Sub "${ServiceName}-single"
+      MaxConcurrency: 100
+      MinSize: 1
+      MaxSize: 1
+
+  AppRunnerService:
+    Type: AWS::AppRunner::Service
+    Properties:
+      ServiceName: !Ref ServiceName
+      SourceConfiguration:
+        AuthenticationConfiguration:
+          AccessRoleArn: !GetAtt AppRunnerAccessRole.Arn
+        ImageRepository:
+          ImageIdentifier: !Sub "${AccountId}.dkr.ecr.${Region}.amazonaws.com/${ServiceName}:latest"
+          ImageRepositoryType: ECR
+          ImageConfiguration:
+            Port: '443'
+        AutoDeploymentsEnabled: true
+      InstanceConfiguration:
+        Cpu: '1024'
+        Memory: '2048'
+        InstanceRoleArn: !GetAtt AppRunnerInstanceRole.Arn
+      ## wenn ein Materna Subnetz verwendet wird, dann brauchen wir auch ein NAT GW oder ein VPC Endpoint für Bedrock, damit die Anwendung auch an den Bedrock Endpunkt kommt.
+      # NetworkConfiguration:
+      #   EgressConfiguration:
+      #     EgressType: VPC
+      #     VpcConnectorArn: !GetAtt VpcConnector.VpcConnectorArn
+      AutoScalingConfigurationArn: !GetAtt AutoScaling.AutoScalingConfigurationArn

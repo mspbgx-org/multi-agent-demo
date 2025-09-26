@@ -1,186 +1,293 @@
-# Demo Agents - Multi-Agent System
+# Multi-Agent Demo System
 
-Ein demonstratives Multi-Agent-System mit Strands Framework, bestehend aus spezialisierten Agenten die über A2A (Agent-to-Agent) Kommunikation orchestriert werden.
+Ein fortschrittliches Multi-Agent-System, das verschiedene spezialisierte KI-Agenten orchestriert, um komplexe Aufgaben zu lösen. Das System basiert auf der Strands-Framework und nutzt AWS Bedrock für die KI-Modelle.
+
+## 🏗️ Architektur
+
+Das System besteht aus mehreren Komponenten:
+
+- **Client Agent**: Lokaler Agent für Benutzerinteraktion
+- **Supervisor Agent**: Orchestriert und delegiert Aufgaben an Spezialisten
+- **Search Agent**: Spezialisiert auf Web-Suche und Informationsbeschaffung
+- **Markdown Agent**: Verarbeitet und erstellt Markdown-Dokumente
 
 ## 📁 Projektstruktur
 
 ```
-demo-agents/
-├── client.py              # Client-Agent für Benutzerinteraktion
-├── supervisior_agent.py   # Supervisor-Agent (orchestriert Spezialisten)
-├── search_agent.py        # Web-Such-Agent
-├── markdown_agent.py      # Markdown-Datei-Management-Agent
-├── requirements.txt       # Python-Abhängigkeiten
-├── files/                 # Verzeichnis für Markdown-Dateien
-└── __pycache__/          # Python Cache-Dateien
+├── client.py                  # Lokaler Client-Agent
+├── agents/
+│   ├── supervisior/
+│   │   ├── supervisior_agent.py    # Supervisor-Agent
+│   │   ├── Dockerfile
+│   │   ├── Makefile
+│   │   └── template.yaml           # AWS SAM Template
+│   ├── search/
+│   │   ├── search_agent.py         # Web-Search-Agent
+│   │   ├── Dockerfile
+│   │   ├── Makefile
+│   │   └── template.yaml
+│   └── markdown/
+│       ├── markdown_agent.py       # Markdown-Verarbeitungsagent
+│       ├── Dockerfile
+│       ├── Makefile
+│       └── template.yaml
+├── files/                     # Lokale Dateien und Dokumente
+└── .vscode/                   # VS Code Konfiguration
 ```
 
-## 🏗️ Architektur
+## 🚀 Deployment
 
-Das System besteht aus vier Hauptkomponenten:
+Das System ist für AWS App Runner optimiert und nutzt:
 
-1. **Search Agent** (Port 5001) - Spezialisiert auf Web-Suche
-2. **Markdown Agent** (Port 5002) - Spezialisiert auf Markdown-Dateien
-3. **Supervisor Agent** (Port 5000) - Orchestriert die Spezialisten
-4. **Client** - Benutzerinterface für das gesamte System
+- **AWS Bedrock**: KI-Modelle (Claude Sonnet)
+- **AWS App Runner**: Container-Hosting
+- **AWS ECR**: Container Registry
+- **AWS IAM**: Zugriffsberechtigungen
 
-## 🔧 Voraussetzungen
+### Voraussetzungen
 
-- Python 3.10+
-- AWS Bedrock Zugang (für Claude Sonnet 4)
-- Internetverbindung für Web-Suche
+- AWS CLI konfiguriert
+- Docker installiert
+- Python 3.11+
+- uv (Python Package Manager)
 
-## 📦 Installation
+### Agent-Deployment
 
-1. Repository klonen oder Dateien herunterladen
-2. Virtual Environment erstellen (empfohlen):
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Auf macOS/Linux
-   ```
-3. Abhängigkeiten installieren:
-   ```bash
-   pip install -r requirements.txt
-   ```
+Jeder Agent kann einzeln deployed werden:
 
-## 🚀 Startanleitung
-
-**Wichtig:** Die Agenten müssen in der richtigen Reihenfolge gestartet werden!
-
-### Schritt 1: Spezialisierte Agenten starten
-
-Öffne **zwei separate Terminals** und starte:
-
-**Terminal 1 - Search Agent:**
 ```bash
-python search_agent.py
+# Beispiel für Search Agent
+cd agents/search
+make create-ecr
+make push
+make deploy-to-aws
 ```
-Läuft auf: `http://localhost:5001`
 
-**Terminal 2 - Markdown Agent:**
-```bash
-python markdown_agent.py
+## 🔧 Konfiguration
+
+### Agent URLs
+
+Die aktuelle Konfiguration verwendet folgende URLs:
+
+```python
+# Supervisor Agent
+SUPERVISOR_URL = "https://tpe2aw8ekp.eu-central-1.awsapprunner.com/"
+
+# Specialist Agents
+SPECIALIST_AGENT_URLS = [
+    "https://yz99cpygph.eu-central-1.awsapprunner.com",  # Search Agent
+]
 ```
-Läuft auf: `http://localhost:5002`
 
-### Schritt 2: Supervisor Agent starten
+### AWS Bedrock Modell
 
-**Terminal 3 - Supervisor Agent:**
-```bash
-python supervisior_agent.py
+```python
+bedrock_model = BedrockModel(
+    model_id="eu.anthropic.claude-sonnet-4-20250514-v1:0"
+)
 ```
-Läuft auf: `http://localhost:5000`
 
-*Der Supervisor erkennt automatisch die verfügbaren Spezialisten-Agenten.*
+## 💻 Lokale Entwicklung
 
-### Schritt 3: Client starten
+### Client starten
 
-**Terminal 4 - Client:**
 ```bash
 python client.py
 ```
 
-## 💡 Verwendung
+### Agent lokal testen
 
-Nach dem Start des Clients können Sie komplexe Aufgaben stellen, die mehrere Agenten koordiniert nutzen:
+```bash
+cd agents/search
+uv install
+uv run python search_agent.py
+```
 
-### Beispiele:
-
-1. **Web-Suche mit Markdown-Dokumentation:**
-   ```
-   Search for the latest news on AI hardware and create a summary in a file named ai_news.md
-   ```
-
-2. **Markdown-Dateien verwalten:**
-   ```
-   List all markdown files and show me the content of ai_news.md
-   ```
-
-3. **Kombinierte Aufgaben:**
-   ```
-   Search for information about Python frameworks and create a comparison document
-   ```
-
-## 🔍 Agent-Details
+## 🛠️ Verfügbare Tools
 
 ### Search Agent
-- **Port:** 5001
-- **Funktion:** Web-Suche mit DuckDuckGo
-- **Tools:**
-  - `websearch()` - Suche im Web mit Keywords
-
-### Markdown Agent
-- **Port:** 5002
-- **Funktion:** Markdown-Datei-Management im `files/` Verzeichnis
-- **Tools:**
-  - `read_markdown_file()` - Dateien lesen
-  - `create_markdown_file()` - Neue Dateien erstellen
-  - `edit_markdown_file()` - Bestehende Dateien bearbeiten
-  - `list_markdown_files()` - Dateien auflisten
+- **websearch**: Web-Suche mit DuckDuckGo
+  - Parameter: `keywords`, `region`, `max_results`
+  - Unterstützt verschiedene Regionen (us-en, uk-en, etc.)
 
 ### Supervisor Agent
-- **Port:** 5000
-- **Funktion:** Orchestrierung und Koordination der Spezialisten
-- **Features:**
-  - Automatische Tool-Entdeckung
-  - Intelligente Aufgaben-Delegation
-  - Multi-Step Workflow-Execution
+- Orchestriert andere Agenten
+- Delegiert Aufgaben basierend auf Kontext
+- Kombiniert Ergebnisse mehrerer Spezialisten
 
-### Client
-- **Funktion:** Benutzerinterface für das gesamte System
-- **Features:**
-  - Interaktive Konsolen-Schnittstelle
-  - Natürliche Sprachverarbeitung
-  - Automatische Agent-Orchestrierung
+## 📋 Beispiel-Verwendung
 
-## 🛠️ Technische Details
+```bash
+> maximilian sparenberg arbeitet bei materna. suche seine position raus.
+```
 
-- **Framework:** Strands mit A2A (Agent-to-Agent) Kommunikation
-- **KI-Modell:** AWS Bedrock Claude Sonnet 4
-- **Kommunikation:** HTTP REST API zwischen Agenten
-- **Datenformat:** JSON für Agent-Kommunikation
+Das System wird:
+1. Die Anfrage analysieren
+2. Den Search Agent für Web-Recherche nutzen
+3. Relevante Informationen aus den lokalen Dateien extrahieren
+4. Eine umfassende Antwort zusammenstellen
 
-## 🚨 Troubleshooting
+## 📊 Verfügbare Dokumente
 
-### Häufige Probleme:
+Das System hat Zugriff auf verschiedene Profile in [`files/`](files/):
 
-1. **"Keine Tools entdeckt"**
-   - Sicherstellen, dass alle vorherigen Agenten laufen
-   - Ports 5001 und 5002 müssen verfügbar sein
+- [`maximilian_sparenberg_materna_profil.md`](files/maximilian_sparenberg_materna_profil.md) - Senior DevOps Engineer Profil
+- [`michael_hagedorn_materna_ceo_profil.md`](files/michael_hagedorn_materna_ceo_profil.md) - CEO Profil  
+- [`Philip_Zweihoff_Recherche.md`](files/Philip_Zweihoff_Recherche.md) - CONET VP Recherche
+- [`Recherche_Carsten_Paasch_Materna.md`](files/Recherche_Carsten_Paasch_Materna.md) - Solutions Manager AI Profil
+- Weitere Profile und Recherchen
 
-2. **"Verbindung fehlgeschlagen"**
-   - Reihenfolge beim Starten beachten
-   - Firewall-Einstellungen prüfen
+## 🔐 Sicherheit
 
-3. **AWS Bedrock Fehler**
-   - AWS-Credentials konfigurieren
-   - Berechtigungen für Bedrock Claude prüfen
+### AWS IAM Berechtigungen
 
-### Logs und Debugging:
+Jeder Agent hat spezifische IAM-Rollen:
 
-Jeder Agent gibt detaillierte Logs aus. Bei Problemen:
-- Console-Ausgaben in jedem Terminal prüfen
-- Logging-Level in den .py-Dateien anpassen
+```yaml
+Policies:
+  - PolicyName: BedrockInvokeModel
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - bedrock:InvokeModel
+            - bedrock:InvokeModelWithResponseStream
+          Resource:
+            - arn:aws:bedrock:*::foundation-model/amazon.nova-micro-v1:0
+            - arn:aws:bedrock:*::foundation-model/anthropic.claude-sonnet-4-20250514-v1:0
+```
 
-## 🔄 Beenden
+### Netzwerk
 
-Um das System ordnungsgemäß zu beenden:
-1. Client beenden: `exit` eingeben oder Ctrl+C
-2. Supervisor beenden: Ctrl+C im Terminal 3
-3. Agenten beenden: Ctrl+C in Terminals 1 und 2
+- App Runner Services mit konfigurierbaren VPC-Konnektoren
+- HTTPS-Kommunikation zwischen Agenten
+- Rate Limiting für externe APIs
 
-## 📝 Entwicklung
+## 🔍 Monitoring und Debugging
 
-Das System ist modular aufgebaut. Neue spezialisierte Agenten können einfach hinzugefügt werden:
+### Logging
 
-1. Neuen Agent mit `A2AServer` erstellen
-2. Agent in `SPECIALIST_AGENT_URLS` im Supervisor eintragen
-3. Supervisor neu starten
+```python
+logging.getLogger("strands").setLevel(logging.INFO)
+```
 
-## 🤝 Beiträge
+### Health Checks
 
-Dies ist ein Demo-Projekt. Bei Fragen oder Verbesserungsvorschlägen wenden Sie sich an das Entwicklerteam.
+Jeder Agent stellt Health-Check-Endpoints zur Verfügung über das A2A (Agent-to-Agent) Protokoll.
+
+## ⚡ Performance
+
+### Auto Scaling Konfiguration
+
+```yaml
+AutoScaling:
+  MaxConcurrency: 100
+  MinSize: 1
+  MaxSize: 1
+```
+
+### Resource Limits
+
+```yaml
+InstanceConfiguration:
+  Cpu: '1024'
+  Memory: '2048'
+```
+
+## 🤖 Agent-to-Agent Kommunikation
+
+Das System nutzt das Strands A2A-Protokoll für:
+
+- **Service Discovery**: Automatische Erkennung verfügbarer Agenten
+- **Tool Proxy**: Dynamische Tool-Generierung für Remote-Agents
+- **Load Balancing**: Verteilung von Anfragen
+- **Error Handling**: Robuste Fehlerbehandlung
+
+## 📝 Entwicklung neuer Agenten
+
+### Agent-Template
+
+```python
+from strands import Agent, tool
+from strands.models import BedrockModel
+from strands.multiagent.a2a import A2AServer
+
+@tool
+def my_tool(parameter: str) -> str:
+    """Tool description for the agent."""
+    return f"Result: {parameter}"
+
+agent = Agent(
+    name="My Agent",
+    system_prompt="System prompt for the agent",
+    tools=[my_tool],
+    model=BedrockModel(model_id="eu.anthropic.claude-sonnet-4-20250514-v1:0")
+)
+
+server = A2AServer(agent=agent, http_url="https://your-url.com")
+server.serve(host="0.0.0.0", port=443)
+```
+
+## 🐳 Docker Deployment
+
+### Build Image
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY agent.py requirements.txt ./
+RUN python -m pip install -r requirements.txt
+CMD ["python", "agent.py"]
+```
+
+### Deploy mit Makefile
+
+```bash
+make build
+make push
+make deploy-to-aws
+```
+
+## 🔄 CI/CD
+
+Die Agenten unterstützen automatisches Deployment über:
+
+- **Auto-Deployment**: Aktiviert in App Runner
+- **ECR Integration**: Automatischer Pull der neuesten Images
+- **SAM Templates**: Infrastructure as Code
+
+## 🎯 Anwendungsfälle
+
+- **Recherche und Analyse**: Kombinierte Web- und Dokumentensuche
+- **Content-Erstellung**: Automatische Markdown-Generierung
+- **Multi-Source-Integration**: Verknüpfung verschiedener Datenquellen
+- **Workflow-Automatisierung**: Mehrstufige Aufgabenverarbeitung
+
+## 🛟 Troubleshooting
+
+### Häufige Probleme
+
+1. **Agent nicht erreichbar**: Überprüfen Sie die URLs in der Konfiguration
+2. **AWS Credentials**: Stellen Sie sicher, dass `.envrc` korrekt konfiguriert ist
+3. **Rate Limits**: Bei DuckDuckGo-Suche Pausen einlegen
+4. **Memory Issues**: App Runner Instanz-Größe anpassen
+
+### Logs überprüfen
+
+```bash
+# CloudWatch Logs für App Runner Services
+aws logs describe-log-groups --log-group-name-prefix="/aws/apprunner/"
+```
+
+## 📄 Lizenz
+
+Dieses Projekt ist für interne Nutzung bei Materna bestimmt.
+
+## 👥 Entwicklerteam
+
+- **Maximilian Sparenberg** - Senior DevOps Engineer bei Materna
+- Weitere Informationen in [`files/maximilian_sparenberg_materna_profil.md`](files/maximilian_sparenberg_materna_profil.md)
 
 ---
 
-**Hinweis:** Dieses Projekt dient zu Demonstrationszwecken und zeigt die Möglichkeiten von Multi-Agent-Systemen mit dem Strands Framework.
+**Hinweis**: Stellen Sie sicher, dass alle AWS-Credentials und API-Keys sicher verwaltet werden und nicht in Version Control eingecheckt werden.
