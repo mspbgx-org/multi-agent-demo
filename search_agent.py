@@ -36,6 +36,7 @@ bedrock_model = BedrockModel(
 )
 
 search_agent = Agent(
+    name="Search Agent",
     system_prompt="""You are a helpful assistant.
     Help users to find information based on their queries and answer questions.
     Use the websearch tool to find information.""",

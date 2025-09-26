@@ -161,6 +161,7 @@ bedrock_model = BedrockModel(
 )
 
 markdown_agent = Agent(
+    name="Markdown Agent",
     description="An agent that can create, read, edit, and list Markdown files in the 'files' directory.",
     system_prompt="""You are a specialized Markdown assistant that helps
 users manage Markdown files in the 'files' directory.
